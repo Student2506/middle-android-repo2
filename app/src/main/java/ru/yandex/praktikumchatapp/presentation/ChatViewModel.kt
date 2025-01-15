@@ -32,10 +32,10 @@ class ChatViewModel(
         }
     }
 
-    fun sendMyMessage(messageText: String) {
+    fun sendMyMessage(message: Message) {
         _messages.update {
             _messages.value.copy(
-                messages = it.messages + Message.MyMessage(messageText)
+                messages = it.messages + message
             )
         }
     }

@@ -32,7 +32,8 @@ class ChatViewModelTest {
     @Test
     fun `send message should update messages with MyMessage`() = runTest {
         val message = Message.MyMessage("TestMessage")
-
+        viewModel.sendMyMessage(message = message)
+        assert(viewModel.messages.value.messages.contains(Message.MyMessage("TestMessage")))
     }
 
     @Test

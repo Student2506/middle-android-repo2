@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
 import ru.yandex.praktikumchatapp.presentation.Message
+import ru.yandex.praktikumchatapp.presentation.Message.MyMessage
 import ru.yandex.praktikumchatapp.ui.theme.PraktikumChatAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -78,7 +79,7 @@ fun ChatScreen(
         ) {
             items(messagesList.value.messages) { message ->
                 when (message) {
-                    is Message.MyMessage -> MyMessageCard(message)
+                    is MyMessage -> MyMessageCard(message)
                     is Message.OtherMessage -> OtherMessageCard(message)
                 }
             }
@@ -91,7 +92,8 @@ fun ChatScreen(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BasicTextField(value = messageText.value,
+            BasicTextField(
+                value = messageText.value,
                 onValueChange = { messageText.value = it },
                 modifier = Modifier
                     .weight(1f)
@@ -103,7 +105,7 @@ fun ChatScreen(
                 ),
                 keyboardActions = KeyboardActions(onSend = {
                     if (messageText.value.isNotBlank()) {
-                        viewModel.sendMyMessage(messageText.value)
+                        viewModel.sendMyMessage(MyMessage(messageText.value))
                         messageText.value = ""
                     }
                 })
@@ -111,7 +113,7 @@ fun ChatScreen(
             Spacer(modifier = Modifier.width(8.dp))
             Button(onClick = {
                 if (messageText.value.isNotBlank()) {
-                    viewModel.sendMyMessage(messageText.value)
+                    viewModel.sendMyMessage(MyMessage(messageText.value))
                     messageText.value = ""
                 }
             }) {
@@ -122,7 +124,7 @@ fun ChatScreen(
 }
 
 @Composable
-fun MyMessageCard(message: Message.MyMessage) {
+fun MyMessageCard(message: MyMessage) {
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
