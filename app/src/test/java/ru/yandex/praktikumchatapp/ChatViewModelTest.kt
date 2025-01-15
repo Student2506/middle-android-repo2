@@ -60,8 +60,9 @@ class ChatViewModelTest {
             Dispatchers.resetMain()
         }
         assert(viewModel.messages.value.messages.size == 100)
-        viewModel.messages.value.messages.zip(messagesToSend).forEach { (messageInList, messageOriginal) ->
-            assert(messageOriginal.text == (messageInList as Message.MyMessage).text)
-        }
+        viewModel.messages.value.messages.zip(messagesToSend)
+            .forEach { (messageInList, messageOriginal) ->
+                assert(messageOriginal.text == (messageInList as Message.MyMessage).text)
+            }
     }
 }
