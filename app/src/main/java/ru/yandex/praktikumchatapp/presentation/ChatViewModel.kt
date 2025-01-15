@@ -1,37 +1,42 @@
 package ru.yandex.praktikumchatapp.presentation
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.praktikumchatapp.data.ChatRepository
+import java.util.concurrent.CopyOnWriteArrayList
 
 class ChatViewModel(
-    val isWithReplies: Boolean = true
+    val isWithReplies: Boolean = true,
 ) : ViewModel() {
 
     private val repository = ChatRepository()
 
-    private val _messages = MutableLiveData<List<Message>>(emptyList())
-    val messages: LiveData<List<Message>> = _messages
+    private val _messages = MutableStateFlow(State.StateMessage(CopyOnWriteArrayList()))
+    val messages = _messages.asStateFlow()
 
     init {
         viewModelScope.launch {
             while (isWithReplies) {
                 repository.getReplyMessage().collect { response ->
-
-                    val currentMessages = _messages.value ?: emptyList()
-                    _messages.value =
-                        currentMessages + Message.OtherMessage(response)
-
+                    _messages.update {
+                        _messages.value.copy(
+                            messages = it.messages + Message.OtherMessage(response)
+                        )
+                    }
                 }
             }
         }
     }
 
     fun sendMyMessage(messageText: String) {
-        val currentMessages = _messages.value ?: emptyList()
-        _messages.value = currentMessages + Message.MyMessage(messageText)
+        _messages.update {
+            _messages.value.copy(
+                messages = it.messages + Message.MyMessage(messageText)
+            )
+        }
     }
 }
