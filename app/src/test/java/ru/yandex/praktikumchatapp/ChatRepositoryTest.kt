@@ -37,33 +37,39 @@ class ChatRepositoryTest {
 
     @Test
     fun `getReplyMessage should return a non-empty string`() = runTest {
-        val replyText = "Hello"
+        val replyText = TEST_REPLY_STRING
         `when`(chatApi.getReply()).thenReturn(flow {
             emit(replyText)
         })
 
         chatRepository.getReplyMessage().test {
-            assert(awaitItem().isNotEmpty())
+            val reply = awaitItem()
+            assert(reply.isNotEmpty())
+            assert(reply == TEST_REPLY_STRING)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
     fun `getReplyMessage should retry on error then successfully return string`() = runTest {
-        val replyText = "Hello"
+        val replyText = TEST_REPLY_STRING
         var isException = true
 
         `when`(chatApi.getReply()).thenReturn(flow {
-                if (isException) {
-                    isException = false
-                    throw Exception("test exception")
-                }
-                emit(replyText)
-            })
+            if (isException) {
+                isException = false
+                throw Exception("test exception")
+            }
+            emit(replyText)
+        })
 
         chatRepository.getReplyMessage().test {
-            assert(awaitItem() == replyText)
+            assert(awaitItem() == TEST_REPLY_STRING)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    private companion object {
+        const val TEST_REPLY_STRING = "Hello"
     }
 }

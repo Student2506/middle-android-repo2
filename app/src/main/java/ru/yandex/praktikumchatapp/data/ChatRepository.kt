@@ -10,7 +10,7 @@ class ChatRepository(
 
     fun getReplyMessage(): Flow<String> {
         return api.getReply().retry { e ->
-            var currentDelay = 1000L
+            var currentDelay = INITIAL_DELAY
 
             if (e is Exception) {
                 delay(currentDelay)
@@ -23,5 +23,6 @@ class ChatRepository(
     }
     private companion object {
         const val DELAY_FACTOR = 2
+        const val INITIAL_DELAY = 1000L
     }
 }

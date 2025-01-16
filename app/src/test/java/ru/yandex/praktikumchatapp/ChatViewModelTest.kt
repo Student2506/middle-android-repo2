@@ -43,26 +43,27 @@ class ChatViewModelTest {
 
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
-        val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
+        val messagesToSend = (1..MESSAGE_COUNT).map { Message.MyMessage("Message $it") }
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         val scope = CoroutineScope(Job() + testDispatcher)
         val jobs = mutableListOf<Job>()
-        Dispatchers.setMain(testDispatcher)
-        try {
-            messagesToSend.forEach { message ->
-                val job = scope.launch {
-                    viewModel.sendMyMessage(message)
-                }
-                jobs.add(job)
+
+        messagesToSend.forEach { message ->
+            val job = scope.launch {
+                viewModel.sendMyMessage(message)
             }
-            jobs.joinAll()
-        } finally {
-            Dispatchers.resetMain()
+            jobs.add(job)
         }
-        assert(viewModel.messages.value.messages.size == 100)
+        jobs.joinAll()
+        testScheduler.advanceUntilIdle()
+        assert(viewModel.messages.value.messages.size == MESSAGE_COUNT)
         viewModel.messages.value.messages.zip(messagesToSend)
             .forEach { (messageInList, messageOriginal) ->
                 assert(messageOriginal.text == (messageInList as Message.MyMessage).text)
             }
+    }
+
+    private companion object {
+        const val MESSAGE_COUNT = 100
     }
 }

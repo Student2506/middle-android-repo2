@@ -23,9 +23,7 @@ class ChatViewModel(
             while (isWithReplies) {
                 repository.getReplyMessage().collect { response ->
                     _messages.update {
-                        _messages.value.copy(
-                            messages = it.messages + Message.OtherMessage(response)
-                        )
+                        it.copy(messages = it.messages + Message.OtherMessage(response))
                     }
                 }
             }
@@ -34,9 +32,7 @@ class ChatViewModel(
 
     fun sendMyMessage(message: Message) {
         _messages.update {
-            _messages.value.copy(
-                messages = it.messages + message
-            )
+            it.copy(messages = it.messages + message)
         }
     }
 }
