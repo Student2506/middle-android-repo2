@@ -1,6 +1,7 @@
 package ru.yandex.praktikumchatapp
 
 import app.cash.turbine.test
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -43,9 +44,9 @@ class ChatRepositoryTest {
         })
 
         chatRepository.getReplyMessage().test {
-            val reply = awaitItem()
-            assert(reply.isNotEmpty())
-            assert(reply == TEST_REPLY_STRING)
+            val actual = awaitItem()
+            val expected = TEST_REPLY_STRING
+            assertEquals(actual, expected)
             cancelAndIgnoreRemainingEvents()
         }
     }
