@@ -25,9 +25,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.yandex.praktikumchatapp.presentation.ChatViewModel
 import ru.yandex.praktikumchatapp.presentation.Message
+import ru.yandex.praktikumchatapp.presentation.Message.MyMessage
 import ru.yandex.praktikumchatapp.ui.theme.PraktikumChatAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -46,21 +49,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PraktikumChatAppTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        TopAppBar(
-                            title = {
-                                Text(stringResource(R.string.app_name))
-                            }
-                        )
-                    },
-                    content = { innerPadding ->
-                        ChatScreen(
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
-                )
+                Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
+                    TopAppBar(title = {
+                        Text(stringResource(R.string.app_name))
+                    })
+                }, content = { innerPadding ->
+                    ChatScreen(
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                })
             }
         }
     }
@@ -68,11 +65,11 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ChatScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val viewModel = remember { ChatViewModel() }
-    val messagesList = viewModel.messages.observeAsState(emptyList())
-    val messageText = remember { mutableStateOf("") }
+    val messagesList by viewModel.messages.collectAsState()
+    var messageText by remember { mutableStateOf("") }
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -82,9 +79,9 @@ fun ChatScreen(
                 .weight(1f)
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
         ) {
-            items(messagesList.value) { message ->
+            items(messagesList.messages) { message ->
                 when (message) {
-                    is Message.MyMessage -> MyMessageCard(message)
+                    is MyMessage -> MyMessageCard(message)
                     is Message.OtherMessage -> OtherMessageCard(message)
                 }
             }
@@ -98,8 +95,8 @@ fun ChatScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             BasicTextField(
-                value = messageText.value,
-                onValueChange = { messageText.value = it },
+                value = messageText,
+                onValueChange = { messageText = it },
                 modifier = Modifier
                     .weight(1f)
                     .padding(8.dp)
@@ -108,24 +105,20 @@ fun ChatScreen(
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Send
                 ),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        if (messageText.value.isNotBlank()) {
-                            viewModel.sendMyMessage(messageText.value)
-                            messageText.value = ""
-                        }
+                keyboardActions = KeyboardActions(onSend = {
+                    if (messageText.isNotBlank()) {
+                        viewModel.sendMyMessage(MyMessage(messageText))
+                        messageText = ""
                     }
-                )
+                })
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = {
-                    if (messageText.value.isNotBlank()) {
-                        viewModel.sendMyMessage(messageText.value)
-                        messageText.value = ""
-                    }
+            Button(onClick = {
+                if (messageText.isNotBlank()) {
+                    viewModel.sendMyMessage(MyMessage(messageText))
+                    messageText = ""
                 }
-            ) {
+            }) {
                 Text(stringResource(R.string.send))
             }
         }
@@ -133,10 +126,9 @@ fun ChatScreen(
 }
 
 @Composable
-fun MyMessageCard(message: Message.MyMessage) {
+fun MyMessageCard(message: MyMessage) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = message.text,
@@ -153,8 +145,7 @@ fun MyMessageCard(message: Message.MyMessage) {
 @Composable
 fun OtherMessageCard(message: Message.OtherMessage) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = message.text,

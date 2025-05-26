@@ -1,6 +1,7 @@
 package ru.yandex.praktikumchatapp
 
 import app.cash.turbine.test
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -13,9 +14,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.times
 import org.mockito.Mockito.`when`
-import org.mockito.kotlin.verify
 import ru.yandex.praktikumchatapp.data.ChatApi
 import ru.yandex.praktikumchatapp.data.ChatRepository
 
@@ -39,28 +38,39 @@ class ChatRepositoryTest {
 
     @Test
     fun `getReplyMessage should return a non-empty string`() = runTest {
+        val replyText = TEST_REPLY_STRING
+        `when`(chatApi.getReply()).thenReturn(flow {
+            emit(replyText)
+        })
 
+        chatRepository.getReplyMessage().test {
+            val actual = awaitItem()
+            val expected = TEST_REPLY_STRING
+            assertEquals(actual, expected)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     @Test
     fun `getReplyMessage should retry on error then successfully return string`() = runTest {
-        val replyText = "Hello"
+        val replyText = TEST_REPLY_STRING
         var isException = true
 
-        `when`(chatApi.getReply())
-            .thenReturn(
-                flow {
-                    if (isException) {
-                        isException = false
-                        throw Exception("test exception")
-                    }
-                    emit(replyText)
-                }
-            )
+        `when`(chatApi.getReply()).thenReturn(flow {
+            if (isException) {
+                isException = false
+                throw Exception("test exception")
+            }
+            emit(replyText)
+        })
 
         chatRepository.getReplyMessage().test {
-            assert(awaitItem() == replyText)
+            assert(awaitItem() == TEST_REPLY_STRING)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    private companion object {
+        const val TEST_REPLY_STRING = "Hello"
     }
 }
